@@ -6,7 +6,7 @@ import udc_model
 import udc_hparams
 import udc_metrics
 import udc_inputs
-from models.dual_encoder import dual_encoder_model
+from models.memn2n import memn2n_model
 
 tf.flags.DEFINE_string("input_dir", "./data", "Directory containing input data files 'train.tfrecords' and 'validation.tfrecords'")
 tf.flags.DEFINE_string("model_dir", None, "Directory to store model checkpoints (defaults to ./runs)")
@@ -20,7 +20,7 @@ TIMESTAMP = int(time.time())
 if FLAGS.model_dir:
   MODEL_DIR = FLAGS.model_dir
 else:
-  MODEL_DIR = os.path.abspath(os.path.join("./runs", str(TIMESTAMP)))
+  MODEL_DIR = os.path.abspath(os.path.join("./runs2", str(TIMESTAMP)))
 
 TRAIN_FILE = os.path.abspath(os.path.join(FLAGS.input_dir, "train.tfrecords"))
 VALIDATION_FILE = os.path.abspath(os.path.join(FLAGS.input_dir, "validation.tfrecords"))
@@ -32,7 +32,8 @@ def main(unused_argv):
 
   model_fn = udc_model.create_model_fn(
     hparams,
-    model_impl=dual_encoder_model)
+    #model_impl=dual_encoder_model)
+    model_impl=memn2n_model)
 
   estimator = tf.contrib.learn.Estimator(
     model_fn=model_fn,
@@ -52,13 +53,18 @@ def main(unused_argv):
     num_epochs=1)
 
   eval_metrics = udc_metrics.create_evaluation_metrics()
-  
+
   eval_monitor = tf.contrib.learn.monitors.ValidationMonitor(
         input_fn=input_fn_eval,
         every_n_steps=FLAGS.eval_every,
         metrics=eval_metrics)
 
-  estimator.fit(input_fn=input_fn_train, steps=None, monitors=[eval_monitor])
+  #eval_monitor2 = tf.contrib.learn.monitors.PrintTensor(tensor_names=["memn2n_model/hop_5/m_i","memn2n_model/hop_5/p_i"])
+
+
+  estimator.fit(input_fn=input_fn_train, steps=None, monitors=[eval_monitor,
+        ])
+        #eval_monitor2])
 
 if __name__ == "__main__":
   tf.app.run()
