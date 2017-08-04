@@ -20,7 +20,7 @@ TIMESTAMP = int(time.time())
 if FLAGS.model_dir:
   MODEL_DIR = FLAGS.model_dir
 else:
-  MODEL_DIR = os.path.abspath(os.path.join("./runs2", str(TIMESTAMP)))
+  MODEL_DIR = os.path.abspath(os.path.join("./runs", str(TIMESTAMP)))
 
 TRAIN_FILE = os.path.abspath(os.path.join(FLAGS.input_dir, "train.tfrecords"))
 VALIDATION_FILE = os.path.abspath(os.path.join(FLAGS.input_dir, "validation.tfrecords"))

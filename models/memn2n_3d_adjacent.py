@@ -103,7 +103,7 @@ def memn2n_model_3d_adjacent(
                 tf.summary.histogram('hidden_state_3d', hidden_state_3d)
 
                 #convert (batch_size, memory_size, embedding_size) to (batch_size, embedding_size, memory_size)
-                reduced_context_A_transposed = tf.transpose(embedded_context_A, perm=(0,2,1), name='reduced_context_A_transposed')
+                reduced_context_A_transposed = tf.transpose(reduced_context_A, perm=(0,2,1), name='reduced_context_A_transposed')
 
                 tf.summary.histogram('reduced_context_A_transposed', reduced_context_A_transposed)
 

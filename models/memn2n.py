@@ -45,6 +45,7 @@ def memn2n_model(
     #dictionary of type model correspondence
     call_model = {'2d': {"adjacent": m2da, "layer_wise": m2dl},
                   '3d': {"adjacent": m3da, "layer_wise": m3dl}
+                  }
 
     #call different models accordingly
     if preprocessing_mode == None:

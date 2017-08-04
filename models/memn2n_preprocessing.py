@@ -15,7 +15,7 @@ def pad_right_with_num(input_tensor, pad_length, padding = 0):
     """
     input_length = tf.shape(input_tensor)[0]
     pad_nums = tf.fill([pad_length], padding)
-    complement_pad_op = tf.pad(pad_nums, [[input_length, 0]])
+    complement_pad_op = tf.cast(tf.pad(pad_nums, [[input_length, 0]]), dtype=tf.int64)
     pad_zero_op = tf.pad(input_tensor, [[0, pad_length]])
     return tf.add(pad_zero_op, complement_pad_op)
 
@@ -54,7 +54,7 @@ def get_position(input_tensor, target_num):
     Returns:
         A tensor of position indices.
     """
-    return tf.squeeze(tf.where(tf.equal(input_tensor, target_num)))
+    return tf.reshape(tf.where(tf.equal(input_tensor, target_num)), [-1])
 
 def create_indices(position_tensor, num_indices, max_length, include_target = True):
     """create a list of complete indices to slice a tensor.
@@ -120,7 +120,7 @@ def split_tensor(input_tensor, max_sentence_len, memory_size, target_num, includ
     Returns:
         A tensor of shape (max_sentence_len, memory_size)
     """
-    target_pos = tf.cast(get_position(input_tensor, target_num), dtype=tf.int32)
+    target_pos = get_position(input_tensor, target_num)
     indices = create_indices(target_pos, memory_size, tf.shape(input_tensor)[0], include_target)
     return tf.stack([extract_and_pad(input_tensor, index, max_sentence_len) for index in indices])
 
