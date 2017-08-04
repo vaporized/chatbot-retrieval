@@ -72,6 +72,6 @@ def memn2n_model(
         context_3d = mp.split_overlap_batch(context, max_s, mem, overlap=overlap_s)
 
     else:
-        raise NotImplementedError()    
+        raise NotImplementedError()
 
     return call_model['3d'][model_type](hparams, mode, context_3d, utterance, targets)
