@@ -3,28 +3,31 @@ import numpy as np
 
 FLAGS = tf.flags.FLAGS
 
-def memn2n_model(
+def memn2n_model_2d_adjacent(
     hparams,
     mode,
     context,
-    context_len,
     utterance,
-    utterance_len,
     targets):
+    """the 2d memn2n model in adjacent mode.
 
-    #the function has to take the same params as the existing model
+    Args:
+        hparams: Hyper-parameters of the model, including training scheme.
+        mode: Indicator of training or validation
+        context: Tensor of shape (batch_size, context_len)
+        utterance: Tensor of shape (batch_size, utterance_len)
+        targets: Tensor of shape (batch_size, 1)
 
-    #the following tf tensors are int64
-    #context: (batch_size, context_len)
-    #context_len: (batch_size,)
-    #utterance: (batch_size, utterance_len)
-    #utterance_len: (batch_size, )
-    #targets: (batch_size, 1)
+    Returns:
+        (probs, mean_loss) for training mode, or (probs, None) for validation
+
+    """
 
 
-    #get parameters
+    #extract parameters
 
     #number of distinct words, will not be counted programmatically since given
+    #the number - word correspondence is in data/vocabulary.txt
     vocab_size = hparams.vocab_size
 
     #standard deviation of random values for initialization
@@ -45,23 +48,23 @@ def memn2n_model(
     A = tf.Variable(tf.random_normal([vocab_size, edim], stddev=init_std), name='A')
 
     #C is the embedding matrix for out memory representation, will be looked up for context
-    C = tf.Variable(tf.random_normal([vocab_size, edim], stddev=init_std), name='C')
+    #C = tf.Variable(tf.random_normal([vocab_size, edim], stddev=init_std), name='C')
 
     #alternatively, use multiple embedding matrix C, used by bAbi implementation
-    # C = []
-    # for idx in nhop:
-    #    with tf.variable_scope('hop_{}'.format(idx)) as vs:
-    #        C.append(tf.Variable(C, name="C"))
+    C = []
+    for idx in range(nhop):
+       with tf.variable_scope('hop_{}'.format(idx)) as vs:
+           C.append(tf.Variable(tf.random_normal([vocab_size, edim], stddev=init_std), name="C"))
 
     #B is the embedding matrix for utterance
-    B = tf.Variable(tf.random_normal([vocab_size, edim], stddev=init_std), name='B')
+    #B = tf.Variable(tf.random_normal([vocab_size, edim], stddev=init_std), name='B')
 
     #final output matrix W, (embedding_size, output_dim)
     W = tf.Variable(tf.random_normal([edim, 1], stddev=init_std), name="W")
 
     #log those variables
     tf.summary.histogram('A',A)
-    tf.summary.histogram('B',B)
+    #tf.summary.histogram('B',B)
     tf.summary.histogram('C',C)
     tf.summary.histogram('W',W)
 
@@ -72,8 +75,8 @@ def memn2n_model(
     with tf.variable_scope('memn2n_model'):
 
         #look up context in embedding matrix A, (batch_size, context_len, embedding_size) and C
-        context_embedded_A = tf.nn.embedding_lookup(A, context, name='context_embedded_A')
-        context_embedded_C = tf.nn.embedding_lookup(C, context, name='context_embedded_C')
+
+
 
         #look up utterance in embedding matrix B, (batch_size, utterance_len, embedding_size)
         utterance_embedded = tf.nn.embedding_lookup(A, utterance, name='utterance_embedded')
@@ -87,6 +90,14 @@ def memn2n_model(
         for n in range(nhop):
 
             with tf.variable_scope('hop_{}'.format(n)) as vs:
+
+                if n==0:
+
+                    context_embedded_A = tf.nn.embedding_lookup(A, context, name='context_embedded_A')
+
+                else:
+                    with tf.variable_scope('hop_{}'.format(n - 1)):
+                        context_embedded_A = tf.nn.embedding_lookup(C[n-1], context, name='context_embedded_A')
 
                 #convert (batch_size, embedding_size) to (batch_size, 1, embedding_size)
                 hidden_state_3d = tf.expand_dims(hidden_state[-1], 1, name='hidden_state_3d')
@@ -115,6 +126,9 @@ def memn2n_model(
 
                 #convert p_i (batch_size, context_len) to (batch_size, 1, context_len)
                 p_i_3d = tf.expand_dims(p_i, 1, name='p_i_3d')
+
+                with tf.variable_scope('hop_{}'.format(n)):
+                    context_embedded_C = tf.nn.embedding_lookup(C[n], context, name='context_embedded_C')
 
                 #inner product of p_i 3d and embedded C
                 #calculates weighted sum of c_i with weight p_i

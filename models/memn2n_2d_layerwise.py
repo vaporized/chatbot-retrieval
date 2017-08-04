@@ -3,44 +3,31 @@ import numpy as np
 
 FLAGS = tf.flags.FLAGS
 
-#from memn2n, babi implementation
-def position_encoding(sentence_size, embedding_size):
-    """
-    Position Encoding described in section 4.1 [1]
-    """
-    encoding = np.ones((embedding_size, sentence_size), dtype=np.float32)
-    ls = sentence_size+1
-    le = embedding_size+1
-    for i in range(1, le):
-        for j in range(1, ls):
-            encoding[i-1, j-1] = (i - (embedding_size+1)/2) * (j - (sentence_size+1)/2)
-    encoding = 1 + 4 * encoding / embedding_size / sentence_size
-    # Make position encoding of time words identity to avoid modifying them
-    encoding[:, -1] = 1.0
-    return np.transpose(encoding)
-
-def memn2n_model(
+def memn2n_model_2d_layerwise(
     hparams,
     mode,
     context,
-    context_len,
     utterance,
-    utterance_len,
     targets):
+    """the 2d memn2n model in layerwise mode.
 
-    #the function has to take the same params as the existing model
+    Args:
+        hparams: Hyper-parameters of the model, including training scheme.
+        mode: Indicator of training or validation
+        context: Tensor of shape (batch_size, context_len)
+        utterance: Tensor of shape (batch_size, utterance_len)
+        targets: Tensor of shape (batch_size, 1)
 
-    #the following tf tensors are int64
-    #context: (batch_size, context_len)
-    #context_len: (batch_size,)
-    #utterance: (batch_size, utterance_len)
-    #utterance_len: (batch_size, )
-    #targets: (batch_size, 1)
+    Returns:
+        (probs, mean_loss) for training mode, or (probs, None) for validation
+
+    """
 
 
-    #get parameters
+    #extract parameters
 
     #number of distinct words, will not be counted programmatically since given
+    #the number - word correspondence is in data/vocabulary.txt
     vocab_size = hparams.vocab_size
 
     #standard deviation of random values for initialization
@@ -51,9 +38,6 @@ def memn2n_model(
 
     #embedding dimension
     edim = hparams.embedding_dim
-
-    pe_c = position_encoding(160, edim)
-    pe_u = position_encoding(160, edim)
 
     #memory size
     #since we only have one sentence in the dataset, this parameter is ignored
@@ -98,7 +82,7 @@ def memn2n_model(
         utterance_embedded = tf.nn.embedding_lookup(A, utterance, name='utterance_embedded')
 
         #sum up every word in utterance, (batch_size, embedding_size)
-        reduced_utterance = tf.reduce_sum(utterance_embedded * pe_u, 1, name='reduced_utterance')
+        reduced_utterance = tf.reduce_sum(utterance_embedded, 1, name='reduced_utterance')
 
         #reduced utterance is the first internal state, [(batch_size, embedding_size)]
         hidden_state.append(reduced_utterance)
@@ -113,7 +97,7 @@ def memn2n_model(
                 tf.summary.histogram('hidden_state_3d', hidden_state_3d)
 
                 #convert (batch_size, context_len, embedding_size) to (batch_size, embedding_size, context_len)
-                context_embedded_A_transposed = tf.transpose(context_embedded_A * pe_c, perm=(0,2,1), name='context_embedded_A_transposed')
+                context_embedded_A_transposed = tf.transpose(context_embedded_A, perm=(0,2,1), name='context_embedded_A_transposed')
 
                 tf.summary.histogram('context_embedded_A_transposed', context_embedded_A_transposed)
 
@@ -139,7 +123,7 @@ def memn2n_model(
                 #calculates weighted sum of c_i with weight p_i
                 #(batch_size, 1, context_len) * (batch_size, context_len, embedding_size)
                 #    => (batch_size, 1, embedding_size)
-                o_3d = tf.matmul(p_i_3d, context_embedded_C * pe_c, name='o_3d')
+                o_3d = tf.matmul(p_i_3d, context_embedded_C, name='o_3d')
 
                 #convert (batch_size, 1, embedding_size) to (batch_size, embedding_size)
                 o = tf.squeeze(o_3d, name='o')
