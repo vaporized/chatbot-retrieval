@@ -28,7 +28,28 @@ tf.flags.DEFINE_string("model_type", "adjacent", "type of the model")
 #Possible options: None, "eou", "eot", "split", "split_overlap"
 tf.flags.DEFINE_string("preprocessing_mode", "eot", "mode of preprocessing")
 
-#TODO: Add params for max_sentense_len
+#params for the word separated models
+#calculated by scripts.memn2n_hparams_estimate.find_split
+
+#data for "eot" mode
+tf.flags.DEFINE_integer("max_sentence_len_split_eot", 40, "max sentence len in split mode")
+tf.flags.DEFINE_integer("memory_size_split_eot", 4, "num of sentence")
+
+#data for "eou" mode
+tf.flags.DEFINE_integer("max_sentence_len_split_eou", 39, "max sentence len in split mode")
+tf.flags.DEFINE_integer("memory_size_split_eou", 6, "num of sentence")
+
+#params for the length separated models
+
+#plain non-overlapping
+tf.flags.DEFINE_integer("max_sentence_len_split", 20, "max sentence len in split mode")
+tf.flags.DEFINE_integer("memory_size_split", 8, "num of sentence")
+
+#with overlapping
+tf.flags.DEFINE_integer("max_sentence_len_overlap", 20, "max sentence len in split mode")
+tf.flags.DEFINE_integer("overlapping_size", 10, "size of overlapping")
+tf.flags.DEFINE_integer("memory_size_overlap", 15, "num of sentence")
+
 
 
 
@@ -48,7 +69,6 @@ tf.flags.DEFINE_string("optimizer", "Adam", "Optimizer Name (Adam, Adagrad, etc)
 
 FLAGS = tf.flags.FLAGS
 
-#TODO: register new hparams
 HParams = namedtuple(
   "HParams",
   [
@@ -64,7 +84,18 @@ HParams = namedtuple(
     "glove_path",
     "vocab_path",
     "init_std",
-    "nhop"
+    "nhop",
+    "model_type",
+    "preprocessing_mode",
+    "max_sentence_len_split_eot",
+    "memory_size_split_eot",
+    "max_sentence_len_split_eou",
+    "memory_size_split_eou",
+    "max_sentence_len_split",
+    "memory_size_split",
+    "max_sentence_len_overlap",
+    "overlapping_size",
+    "memory_size_overlap"
   ])
 
 def create_hparams():
@@ -81,4 +112,16 @@ def create_hparams():
     vocab_path=FLAGS.vocab_path,
     rnn_dim=FLAGS.rnn_dim,
     init_std=FLAGS.init_std,
-    nhop=FLAGS.nhop)
+    nhop=FLAGS.nhop,
+    model_type=FLAGS.model_type,
+    preprocessing_mode=FLAGS.preprocessing_mode,
+    max_sentence_len_split_eot=FLAGS.max_sentence_len_split_eot,
+    memory_size_split_eot=FLAGS.memory_size_split_eot,
+    max_sentence_len_split_eou=FLAGS.max_sentence_len_split_eou,
+    memory_size_split_eou=FLAGS.memory_size_split_eou,
+    max_sentence_len_split=FLAGS.max_sentence_len_split,
+    memory_size_split=FLAGS.memory_size_split,
+    max_sentence_len_overlap=FLAGS.max_sentence_len_overlap,
+    overlapping_size=FLAGS.overlapping_size,
+    memory_size_overlap=FLAGS.memory_size_overlap
+    )

@@ -114,8 +114,8 @@ def split_tensor(input_tensor, max_sentence_len, memory_size, target_num, includ
         input_tensor: The vector of sentences (in words).
         max_sentence_len: The exact length of each sentence in the output.
         memory_size: The number of sentences in the output.
-        target_num: The splitter (eou: 1, eot: 2).
-        include_target: (optional) Whether to include the splitter.
+        target_num: The deliminator (eou: 1, eot: 2).
+        include_target: (optional) Whether to include the deliminator.
 
     Returns:
         A tensor of shape (max_sentence_len, memory_size)
