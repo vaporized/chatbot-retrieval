@@ -21,12 +21,12 @@ tf.flags.DEFINE_float("init_std", 0.05, "weight initialization std [0.05]")
 
 #two types of the model according to the paper
 #Possible options: "adjacent" or "layer_wise"
-tf.flags.DEFINE_string("model_type", "adjacent", "type of the model")
+tf.flags.DEFINE_string("model_type", "layer_wise", "type of the model")
 #tf.flags.DEFINE_string("model_type", "layer_wise", "type of the model")
 
 #preprocessing mode, done at RUN TIME
 #Possible options: None, "eou", "eot", "split", "split_overlap"
-tf.flags.DEFINE_string("preprocessing_mode", "eot", "mode of preprocessing")
+tf.flags.DEFINE_string("preprocessing_mode", None, "mode of preprocessing")
 
 #params for the word separated models
 #calculated by scripts.memn2n_hparams_estimate.find_split
